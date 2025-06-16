@@ -15,6 +15,8 @@ npm start
 ```
 
 A aplicação será aberta com `live-server` em `src/index.html`.
+O fundo agora utiliza a biblioteca [Three.js](https://threejs.org/)
+para criar um campo de estrelas.
 
 ## Construir para produção
 
