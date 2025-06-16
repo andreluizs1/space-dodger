@@ -1,5 +1,6 @@
 import Player from './player.js';
 import Asteroid from './asteroid.js';
+import Bullet from './bullet.js';
 import * as input from './input.js';
 
 /** Game configuration constants */
@@ -22,25 +23,36 @@ export default class Game {
     this.state = 'menu'; // menu | playing | gameover
     this.player = new Player(canvas.width / 2, canvas.height - 60, CONFIG.playerSize);
     this.asteroids = [];
+    this.bullets = [];
     this.spawnTimer = 0;
     this.levelTimer = 0;
     this.spawnInterval = CONFIG.asteroidSpawnInterval;
     this.score = 0;
     this.elapsed = 0;
+    this.time = 0;
+    this.paused = false;
   }
 
   start() {
     this.state = 'playing';
     this.asteroids = [];
+    this.bullets = [];
     this.spawnTimer = 0;
     this.levelTimer = 0;
     this.spawnInterval = CONFIG.asteroidSpawnInterval;
     this.score = 0;
     this.elapsed = 0;
+    this.time = 0;
+    this.paused = false;
   }
 
   gameOver() {
     this.state = 'gameover';
+  }
+
+  togglePause() {
+    if (this.state !== 'playing') return;
+    this.paused = !this.paused;
   }
 
   update(delta) {
@@ -51,13 +63,20 @@ export default class Game {
       return;
     }
 
+    if (input.isPause()) {
+      this.togglePause();
+    }
+
+    if (this.paused) return;
+
     const dt = delta / 1000;
     this.spawnTimer += delta;
     this.levelTimer += delta;
     this.elapsed += delta;
+    this.time += delta;
 
     if (this.spawnTimer > this.spawnInterval) {
-      this.asteroids.push(new Asteroid(this.canvas.width, CONFIG.asteroidSpeed));
+      this.asteroids.push(new Asteroid(this.canvas.width, this.canvas.height, CONFIG.asteroidSpeed));
       this.spawnTimer = 0;
     }
 
@@ -67,16 +86,44 @@ export default class Game {
       this.levelTimer = 0;
     }
 
-    this.player.update(dt, this.canvas.width);
+    this.player.update(dt, this.canvas.width, this.canvas.height);
+
+    if (input.isFire()) {
+      this.bullets.push(new Bullet(
+        this.player.x + Math.cos(this.player.angle) * this.player.size,
+        this.player.y + Math.sin(this.player.angle) * this.player.size,
+        this.player.angle
+      ));
+    }
+
+    this.bullets.forEach(b => b.update(dt));
+    this.bullets = this.bullets.filter(b => !b.offscreen(this.canvas.width, this.canvas.height));
 
     this.asteroids.forEach(a => a.update(dt));
-    this.asteroids = this.asteroids.filter(a => !a.offscreen(this.canvas.height));
+    this.asteroids = this.asteroids.filter(a => !a.offscreen(this.canvas.width, this.canvas.height));
 
-    // collision
+    // collision player
     for (const asteroid of this.asteroids) {
       if (asteroid.collidesWith(this.player)) {
         this.gameOver();
         break;
+      }
+    }
+
+    // collision bullets
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
+      for (let j = this.asteroids.length - 1; j >= 0; j--) {
+        const ast = this.asteroids[j];
+        const dx = bullet.x - ast.x;
+        const dy = bullet.y - ast.y;
+        if (Math.hypot(dx, dy) < ast.size + bullet.size) {
+          this.bullets.splice(i, 1);
+          this.asteroids.splice(j, 1);
+          this.asteroids.push(...ast.split());
+          this.score += 5;
+          break;
+        }
       }
     }
 
@@ -99,11 +146,14 @@ export default class Game {
     }
 
     this.player.draw(this.ctx);
+    this.bullets.forEach(b => b.draw(this.ctx));
     this.asteroids.forEach(a => a.draw(this.ctx));
 
-    // HUD
+    // HUD (canvas for menu/game over)
     this.ctx.fillStyle = '#fff';
-    this.ctx.fillText(`Score: ${this.score}`, 20, 20);
+    if (this.paused) {
+      this.drawText('Paused', this.canvas.height / 2);
+    }
   }
 
   drawText(text, y) {
