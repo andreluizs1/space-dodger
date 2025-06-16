@@ -1,0 +1,14 @@
+{
+  "name": "space-dodger",
+  "version": "1.0.0",
+  "description": "Simple endless runner with asteroids",
+  "type": "module",
+  "scripts": {
+    "start": "live-server --entry-file=src/index.html",
+    "build": "parcel build src/index.html --dist-dir dist"
+  },
+  "devDependencies": {
+    "parcel": "^2.0.0",
+    "live-server": "^1.2.2"
+  }
+}
