@@ -25,3 +25,17 @@ body {
 canvas {
   display: block;
 }
+
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+#hud span {
+  margin-right: 10px;
+}
