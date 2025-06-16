@@ -15,8 +15,8 @@ npm start
 ```
 
 A aplicação será aberta com `live-server` em `src/index.html`.
-O fundo agora utiliza a biblioteca [Three.js](https://threejs.org/)
-para criar um campo de estrelas.
+O fundo do jogo agora é gerado por um pequeno starfield em
+Canvas 2D, sem dependências externas.
 
 ## Construir para produção
 
