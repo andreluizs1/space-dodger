@@ -1,4 +1,5 @@
 import Game from './game.js';
+import StarField from './starfield.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -10,12 +11,15 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
+const starfield = new StarField();
 const game = new Game(canvas, ctx);
 let lastTime = 0;
 
 function loop(timestamp) {
   const delta = timestamp - lastTime;
   lastTime = timestamp;
+  starfield.update(delta);
+  starfield.render();
   game.update(delta);
   game.draw();
   requestAnimationFrame(loop);
